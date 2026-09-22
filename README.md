@@ -5,28 +5,27 @@ REST API for uploading images and generating resized thumbnails, via presets or 
 
 ## Architecture
 
-```
-Client
-  |
-  | POST /thumbnails (multipart: file + preset OR width/height)
-  v
-FastAPI routing
-  |
-  | Validates preset/dimensions (get_target_size) -> 400/422 on failure
-  | Validates file is an image -> 422 on failure
-  v
-Pillow: opens image, resizes preserving aspect ratio (image.thumbnail)
-  |
-  v
-Save resized file to disk (uploads/) + metadata row to SQLite (via SQLAlchemy)
-  |
-  v
-Response: thumbnail metadata (id, dimensions, filename, created_at)
+```mermaid
+flowchart TD
+    A[Client] -->|POST /thumbnails<br/>multipart: files + preset/dimensions| B[FastAPI Routing]
+    B --> C{Validate preset/dimensions<br/>get_target_size}
+    C -->|invalid| D[400/422 Error]
+    C -->|valid| E{Validate file<br/>is an image}
+    E -->|invalid| D
+    E -->|valid| F[Pillow: resize<br/>preserving aspect ratio]
+    F --> G[Save file to disk<br/>uploads/]
+    F --> H[Save metadata<br/>to SQLite]
+    G --> I[Return thumbnail<br/>metadata JSON]
+    H --> I
 
----
+    J[Client] -->|GET /thumbnails/id| K[Query SQLite]
+    K --> L[Return metadata]
 
-GET /thumbnails/{id}        -> query SQLite -> return metadata JSON
-GET /thumbnails/{id}/download -> query SQLite -> stream file from disk
+    M[Client] -->|GET /thumbnails/id/download| N[Query SQLite]
+    N --> O[Stream file from disk]
+
+    P[Client] -->|DELETE /thumbnails/id| Q[Query SQLite]
+    Q --> R[Delete file + DB row]
 ```
 
 ## Setup
