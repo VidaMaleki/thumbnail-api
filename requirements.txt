@@ -5,3 +5,4 @@ pillow
 pytest
 httpx
 python-multipart
+python-dotenv
