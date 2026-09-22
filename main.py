@@ -1,4 +1,5 @@
 import os, uuid, logging
+from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -6,15 +7,23 @@ from PIL import Image
 from database import engine, Base, get_db
 import models, schemas
 
+load_dotenv()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
-PRESETS = {"small": (150, 150), "medium": (400, 400), "large": (800, 800)}
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+PRESETS = {
+    "small": (int(os.getenv("PRESET_SMALL", 150)), int(os.getenv("PRESET_SMALL", 150))),
+    "medium": (int(os.getenv("PRESET_MEDIUM", 400)), int(os.getenv("PRESET_MEDIUM", 400))),
+    "large": (int(os.getenv("PRESET_LARGE", 800)), int(os.getenv("PRESET_LARGE", 800))),
+}
+
 
 def get_target_size(preset: str = None, width: int = None, height: int = None) -> tuple:
     if preset:
