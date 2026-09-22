@@ -91,6 +91,29 @@ def test_create_and_retrieve_thumbnail():
     assert download_response.status_code == 200
     assert download_response.headers["content-type"] == "image/jpeg"
 
+def test_list_thumbnails():
+    buf = make_test_image()
+    client.post("/thumbnails", files=[("files", ("t.jpg", buf, "image/jpeg"))], data={"preset": "small"})
+    response = client.get("/thumbnails")
+    assert response.status_code == 200
+    assert len(response.json()) >= 1
+
+
+def test_delete_thumbnail():
+    buf = make_test_image()
+    create_response = client.post("/thumbnails", files=[("files", ("t.jpg", buf, "image/jpeg"))], data={"preset": "small"})
+    thumbnail_id = create_response.json()[0]["id"]
+
+    delete_response = client.delete(f"/thumbnails/{thumbnail_id}")
+    assert delete_response.status_code == 200
+
+    get_response = client.get(f"/thumbnails/{thumbnail_id}")
+    assert get_response.status_code == 404
+
+
+def test_delete_nonexistent_thumbnail():
+    response = client.delete("/thumbnails/fake-id")
+    assert response.status_code == 404
 
 def test_health_check():
     response = client.get("/health")

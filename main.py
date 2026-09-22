@@ -81,6 +81,23 @@ def download(id: str, db: Session = Depends(get_db)):
         raise HTTPException(404, "Thumbnail not found")
     return FileResponse(record.file_path)
 
+@app.get("/thumbnails", response_model=list[schemas.ThumbnailResponse])
+def list_thumbnails(db: Session = Depends(get_db)):
+    return db.query(models.Thumbnail).order_by(models.Thumbnail.created_at.desc()).all()
+
+
+@app.delete("/thumbnails/{id}")
+def delete_thumbnail(id: str, db: Session = Depends(get_db)):
+    record = db.query(models.Thumbnail).filter(models.Thumbnail.id == id).first()
+    if not record:
+        raise HTTPException(404, "Thumbnail not found")
+    if os.path.exists(record.file_path):
+        os.remove(record.file_path)
+    db.delete(record)
+    db.commit()
+    logger.info(f"Deleted thumbnail {id}")
+    return {"detail": "Thumbnail deleted"}
+
 
 # add /health endpoint
 @app.get("/health")
