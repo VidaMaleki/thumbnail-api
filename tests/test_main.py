@@ -90,3 +90,9 @@ def test_create_and_retrieve_thumbnail():
     download_response = client.get(f"/thumbnails/{thumbnail_id}/download")
     assert download_response.status_code == 200
     assert download_response.headers["content-type"] == "image/jpeg"
+
+
+def test_health_check():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}

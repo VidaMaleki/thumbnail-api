@@ -80,3 +80,9 @@ def download(id: str, db: Session = Depends(get_db)):
     if not record:
         raise HTTPException(404, "Thumbnail not found")
     return FileResponse(record.file_path)
+
+
+# add /health endpoint
+@app.get("/health")
+def health():
+    return {"status": "ok"}
